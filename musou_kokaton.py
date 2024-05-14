@@ -240,8 +240,54 @@ class Score:
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         screen.blit(self.image, self.rect)
 
+class Sheeld(pg.sprite.Sprite):
+    """
+    こうかとんの向いている向きに長方形のシールドを表示するクラス
+    """
+    is_not_shield = True
+    def __init__(self, bird: Bird,life: int):
+        #シールドが展開中はFalseのクラス変数
+        
 
+        """
+        長方形の壁を生成する
+        """
+        super().__init__()
+        # 壁　幅20 高さ　こうかとんの半分の高さ
+        self.image = pg.Surface((20, bird.rect.height*2)) 
+        self.image.fill((0, 0, 255))
+        self.rect = self.image.get_rect()
+        self.rect.center = bird.rect.center
+        pg.draw.rect(self.image, (0, 0, 255), self.rect)
+
+        # birdの向いている方向に合わせて回転
+        vx , vy = bird.dire
+        angle = math.degrees(math.atan2(-vy, vx))
+        self.image = pg.transform.rotate(self.image, angle)
+        self.rect = self.image.get_rect(center=self.rect.center)
+
+        # シールドをBirdの向いている先に設置
+        self.rect.centerx += bird.rect.width*vx
+        self.rect.centery += bird.rect.height*vy
+
+        # シールドの耐久値
+        self.life = life
+
+        # シールド展開中はFalse
+        __class__.is_not_shield = False
+
+    def update(self, bird: Bird):
+        #print(self.life)
+        self.life -= 1
+        if self.life < 0:
+            __class__.is_not_shield = True
+            self.kill()
+        
+
+        
 def main():
+
+
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
@@ -252,6 +298,11 @@ def main():
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
+    sheelds = pg.sprite.Group()
+    
+    # デバッグ
+    #score.value = 100
+
 
     tmr = 0
     clock = pg.time.Clock()
@@ -293,6 +344,24 @@ def main():
             pg.display.update()
             time.sleep(2)
             return
+        
+        # Cボタンを押すとシールドを展開
+        #if key_lst[pg.K_c] & score.value >= 50:
+        if key_lst[pg.K_c] & Sheeld.is_not_shield & (score.value >= 50):
+        #if key_lst[pg.K_c]:
+            print(score.value >= 50)
+            print(Sheeld.is_not_shield)
+            #score.value -= 50
+            print("シールド展開")
+            # スコアが50減る
+            score.value -= 50
+            sheelds.add(Sheeld(bird, 400))
+        
+        # 壁と爆弾が衝突したら爆発
+        for bomb in pg.sprite.groupcollide(bombs, sheelds, True, False).keys():
+            exps.add(Explosion(bomb, 50))
+            score.value += 1
+
 
         bird.update(key_lst, screen)
         beams.update()
@@ -304,6 +373,11 @@ def main():
         exps.update()
         exps.draw(screen)
         score.update(screen)
+
+        if not Sheeld.is_not_shield:
+            sheelds.update(bird)
+            sheelds.draw(screen)
+
         pg.display.update()
         tmr += 1
         clock.tick(50)
