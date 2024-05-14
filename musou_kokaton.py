@@ -277,7 +277,7 @@ class Sheeld(pg.sprite.Sprite):
         __class__.is_not_shield = False
 
     def update(self, bird: Bird):
-        print(self.life)
+        #print(self.life)
         self.life -= 1
         if self.life < 0:
             self.kill()
@@ -285,6 +285,8 @@ class Sheeld(pg.sprite.Sprite):
 
         
 def main():
+
+
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
@@ -297,6 +299,9 @@ def main():
     emys = pg.sprite.Group()
     sheelds = pg.sprite.Group()
     
+    # デバッグ
+    score.value = 100
+
 
     tmr = 0
     clock = pg.time.Clock()
@@ -335,8 +340,10 @@ def main():
         
         # Cボタンを押すとシールドを展開
         #if key_lst[pg.K_c] & score.value >= 50:
-        if key_lst[pg.K_c] & Sheeld.is_not_shield & score.value >= 50:
+        if key_lst[pg.K_c] & Sheeld.is_not_shield & (score.value >= 50):
         #if key_lst[pg.K_c]:
+            print(score.value >= 50)
+            print(Sheeld.is_not_shield)
             #score.value -= 50
             print("シールド展開")
             sheelds.add(Sheeld(bird, 400))
