@@ -301,7 +301,7 @@ def main():
     sheelds = pg.sprite.Group()
     
     # デバッグ
-    score.value = 100
+    #score.value = 100
 
 
     tmr = 0
