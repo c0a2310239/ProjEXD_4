@@ -206,7 +206,7 @@ class Enemy(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = random.randint(0, WIDTH), 0
         self.vy = +6
-        self.bound = random.randint(50, HEIGHT/2)  # 停止位置
+        self.bound = random.randint(50, int(HEIGHT/2))  # 停止位置
         self.state = "down"  # 降下状態or停止状態
         self.interval = random.randint(50, 300)  # 爆弾投下インターバル
 
@@ -263,6 +263,12 @@ def main():
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
         screen.blit(bg_img, [0, 0])
+
+        #左シフトを押した時birdの速度を20に変更する
+        if key_lst[pg.K_LSHIFT]:
+            bird.speed = 20
+        else:
+            bird.speed = 10
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
             emys.add(Enemy())
