@@ -207,7 +207,7 @@ class Enemy(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = random.randint(0, WIDTH), 0
         self.vy = +6
-        #self.bound = random.randint(50, HEIGHT/2)  # 停止位置
+        #self.bound = random.randint(50, int(HEIGHT/2))  # 停止位置
         self.bound = random.randint(50, int(HEIGHT/2))  # 停止位置
         self.state = "down"  # 降下状態or停止状態
         self.interval = random.randint(50, 300)  # 爆弾投下インターバル
@@ -242,22 +242,85 @@ class Score:
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         screen.blit(self.image, self.rect)
 
+class Gravity(pg.sprite.Sprite):
+    """
+    エンターキーを押すと画面内の敵を倒す
+    """
+    def __init__(self, life):
+        super().__init__()
+        self.image = pg.Surface((1600,900))
+        pg.draw.rect(self.image, (0, 0, 0), (0, 0, 1600, 900))
+        self.image.set_alpha(200)
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH/2, HEIGHT/2)
+        self.life = life     #発動時間の定義
+    def update(self):
+        self.life -= 1
+        if self.life <= 0:
+            self.kill()
+
+class Sheeld(pg.sprite.Sprite):
+    """
+    こうかとんの向いている向きに長方形のシールドを表示するクラス
+    """
+    is_not_shield = True
+    def __init__(self, bird: Bird,life: int):
+        #シールドが展開中はFalseのクラス変数
+        
+
+        """
+        長方形の壁を生成する
+        """
+        super().__init__()
+        # 壁　幅20 高さ　こうかとんの半分の高さ
+        self.image = pg.Surface((20, bird.rect.height*2)) 
+        self.image.fill((0, 0, 255))
+        self.rect = self.image.get_rect()
+        self.rect.center = bird.rect.center
+        pg.draw.rect(self.image, (0, 0, 255), self.rect)
+
+        # birdの向いている方向に合わせて回転
+        vx , vy = bird.dire
+        angle = math.degrees(math.atan2(-vy, vx))
+        self.image = pg.transform.rotate(self.image, angle)
+        self.rect = self.image.get_rect(center=self.rect.center)
+
+        # シールドをBirdの向いている先に設置
+        self.rect.centerx += bird.rect.width*vx
+        self.rect.centery += bird.rect.height*vy
+
+        # シールドの耐久値
+        self.life = life
+
+        # シールド展開中はFalse
+        __class__.is_not_shield = False
+
+    def update(self, bird: Bird):
+        #print(self.life)
+        self.life -= 1
+        if self.life < 0:
+            __class__.is_not_shield = True
+            self.kill()
+        
+
         
 
 def main():
+
+
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
     score = Score()
+    #score.value =900000000
 
     bird = Bird(3, (900, 400))
     bombs = pg.sprite.Group()
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
-    EMPs=pg.sprite.Group()
-
-    score.value = 100
+    gravity = pg.sprite.Group()
+    sheelds = pg.sprite.Group()
 
     tmr = 0
     clock = pg.time.Clock()
@@ -268,7 +331,9 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
-            #print(key_lst[pg.K_e] , score.value > 20        
+            if event.type == pg.KEYDOWN and event.key == pg.K_RETURN and score.value >= 200:
+                gravity.add(Gravity(400))
+                score.value -= 200
 
         screen.blit(bg_img, [0, 0])
 
@@ -294,12 +359,39 @@ def main():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.value += 1  # 1点アップ
 
+        for emy in pg.sprite.groupcollide(emys, gravity, True, False).keys():
+            exps.add(Explosion(emy, 100))
+            score.value += 10
+            bird.change_img(6, screen)
+
+        for bomb in pg.sprite.groupcollide(bombs, gravity, True, False).keys():
+            exps.add(Explosion(bomb, 50))
+            score.value += 1
+
         if len(pg.sprite.spritecollide(bird, bombs, True)) != 0:
             bird.change_img(8, screen) # こうかとん悲しみエフェクト
             score.update(screen)
             pg.display.update()
             time.sleep(2)
             return
+        
+        # Cボタンを押すとシールドを展開
+        #if key_lst[pg.K_c] & score.value >= 50:
+        if key_lst[pg.K_c] & Sheeld.is_not_shield & (score.value >= 50):
+        #if key_lst[pg.K_c]:
+            print(score.value >= 50)
+            print(Sheeld.is_not_shield)
+            #score.value -= 50
+            print("シールド展開")
+            # スコアが50減る
+            score.value -= 50
+            sheelds.add(Sheeld(bird, 400))
+        
+        # 壁と爆弾が衝突したら爆発
+        for bomb in pg.sprite.groupcollide(bombs, sheelds, True, False).keys():
+            exps.add(Explosion(bomb, 50))
+            score.value += 1
+
 
         bird.update(key_lst, screen)
         beams.update()
@@ -311,8 +403,12 @@ def main():
         exps.update()
         exps.draw(screen)
         score.update(screen)
-        EMPs.draw(screen)
-        EMPs.update()
+        gravity.draw(screen)
+        gravity.update()
+
+        if not Sheeld.is_not_shield:
+            sheelds.update(bird)
+            sheelds.draw(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
