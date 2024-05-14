@@ -147,8 +147,7 @@ class Beam(pg.sprite.Sprite):
         """
         super().__init__()
         self.vx, self.vy = bird.dire
-        angle= math.degrees(math.atan2(-self.vy, self.vx)+angle0)
-        
+        angle= math.degrees(math.atan2(-self.vy, self.vx)+angle0)  #こうかとんの角度にangle0を追加        
         self.image = pg.transform.rotozoom(pg.image.load(f"fig/beam.png"), angle, 2.0)
         self.vx = math.cos(math.radians(angle))
         self.vy = -math.sin(math.radians(angle))
@@ -166,8 +165,10 @@ class Beam(pg.sprite.Sprite):
         if check_bound(self.rect) != (True, True):
             self.kill()
 
-"""
+'''
+Beamを複数つくる弾幕クラス
 class NeoBeam():
+
     def __init__(self):
         self.b_lst = []
     
@@ -175,7 +176,7 @@ class NeoBeam():
         for i in range(10):
             self.b_lst.append(-50+i*10)
         return self.b_lst
-"""
+'''        
 
 
 
@@ -274,6 +275,7 @@ def main():
             if event.type == pg.QUIT:
                 return 0
             
+            #もし左シフトキーおよびスペースキーが押されたら五個のビームを生成
             if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT and pg.K_SPACE: 
                 for i in range(5):
                     if i != 2:
