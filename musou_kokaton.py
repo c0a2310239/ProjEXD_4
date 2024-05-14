@@ -207,7 +207,8 @@ class Enemy(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = random.randint(0, WIDTH), 0
         self.vy = +6
-        self.bound = random.randint(50, HEIGHT/2)  # 停止位置
+        #self.bound = random.randint(50, HEIGHT/2)  # 停止位置
+        self.bound = random.randint(50, int(HEIGHT/2))  # 停止位置
         self.state = "down"  # 降下状態or停止状態
         self.interval = random.randint(50, 300)  # 爆弾投下インターバル
 
@@ -241,35 +242,6 @@ class Score:
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         screen.blit(self.image, self.rect)
 
-
-class EMP(pg.sprite.Sprite):
-    """
-    電磁パルスに関するクラス
-    """
-    def __init__(self, emys:Enemy, Bmbs:Bomb,screen):
-        """
-        ビーム画像Surfaceを生成する
-        引数 bird：ビームを放つこうかとん
-        """
-        super().__init__()
-        #for i in Enemy.imgs:
-            #emy.image=pg.transform.laplacian(i)
-        for emy in emys:
-            emy.image=pg.transform.laplacian(emy.image)
-            emy.interval=math.inf
-        for bomb in Bmbs:
-            bomb.speed/=2
-            bomb.state="inactive"
-        self.image=pg.Surface((WIDTH, HEIGHT))
-        self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH/2,HEIGHT/2)
-        pg.draw.rect(self.image, (255, 255, 0), (0,0,1600,900), width=0)
-        self.image.set_alpha(50)
-        pg.display.update()
-        self.image.set_colorkey((0, 0, 0))
-        time.sleep(2)
-        self.image.set_alpha(100)
-        pg.display.update()
         
 
 def main():
@@ -296,19 +268,14 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
-            #print(key_lst[pg.K_e] , score.value > 20)
-            
-        if  key_lst[pg.K_e] and score.value > 20:
-                print("EMP")
-                EMPs.add(EMP(emys,bombs,screen))
-                
-            #この上はビームに倣って適当につけた
-                score.value -= 20
-        
+            #print(key_lst[pg.K_e] , score.value > 20        
 
         screen.blit(bg_img, [0, 0])
 
-            
+        if key_lst[pg.K_LSHIFT]:
+            bird.speed = 20
+        else:
+            bird.speed = 10
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
             emys.add(Enemy())
