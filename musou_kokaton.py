@@ -46,6 +46,8 @@ class Bird(pg.sprite.Sprite):
         pg.K_LEFT: (-1, 0),
         pg.K_RIGHT: (+1, 0),
     }
+    state="normal"  #こうかとんの状態の変数
+    hyper_life=500  #無敵時間(単位:frame)
 
     def __init__(self, num: int, xy: tuple[int, int]):
         """
@@ -98,6 +100,14 @@ class Bird(pg.sprite.Sprite):
         if not (sum_mv[0] == 0 and sum_mv[1] == 0):
             self.dire = tuple(sum_mv)
             self.image = self.imgs[self.dire]
+
+        if self.state == "hyper":     #無敵状態の場合
+            if self.hyper_life <= 0:  #時間が0の場合
+                self.state="normal"     #ノーマルモードにする
+            else:
+                self.hyper_life -= 1    #時間を1フレームごとに減らす
+                self.image = pg.transform.laplacian(self.image) #特殊状態にする
+
         screen.blit(self.image, self.rect)
 
 
@@ -334,6 +344,12 @@ def main():
                 gravity.add(Gravity(400))
                 score.value -= 200
 
+
+            if (event.type == pg.KEYDOWN) and (event.key == pg.K_RSHIFT) and (score.value >= 100) and not (bird.state=="hyper"):   #Rshiftキーが押されたかつスコアが１００以上の場合
+                bird.state = "hyper"    #無敵状態にする
+                score.value -= 100      #スコアを減らして５００フレーム分無敵にする
+                bird.hyper_life = 500
+
         screen.blit(bg_img, [0, 0])
 
         if key_lst[pg.K_LSHIFT]:
@@ -367,12 +383,7 @@ def main():
             exps.add(Explosion(bomb, 50))
             score.value += 1
 
-        if len(pg.sprite.spritecollide(bird, bombs, True)) != 0:
-            bird.change_img(8, screen) # こうかとん悲しみエフェクト
-            score.update(screen)
-            pg.display.update()
-            time.sleep(2)
-            return
+        
         
         # Cボタンを押すとシールドを展開
         #if key_lst[pg.K_c] & score.value >= 50:
@@ -390,7 +401,20 @@ def main():
         for bomb in pg.sprite.groupcollide(bombs, sheelds, True, False).keys():
             exps.add(Explosion(bomb, 50))
             score.value += 1
-
+        
+        touch_bomb=pg.sprite.spritecollide(bird, bombs, False)
+        if len(touch_bomb) != 0:
+            if (bird.state == "hyper"):
+                exps.add(Explosion(touch_bomb[0], 50))  # 爆発エフェクト
+                score.value += 1  # 1点アップ
+                touch_bomb[0].kill()
+            else:
+                touch_bomb[0].kill()    
+                bird.change_img(8, screen) # こうかとん悲しみエフェクト
+                score.update(screen)
+                pg.display.update()
+                time.sleep(2)
+                return
 
         bird.update(key_lst, screen)
         beams.update()
