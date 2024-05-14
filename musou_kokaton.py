@@ -125,6 +125,7 @@ class Bomb(pg.sprite.Sprite):
         self.rect.centerx = emy.rect.centerx
         self.rect.centery = emy.rect.centery+emy.rect.height/2
         self.speed = 6
+        self.state= "active"
 
     def update(self):
         """
@@ -138,7 +139,7 @@ class Bomb(pg.sprite.Sprite):
 
 class Beam(pg.sprite.Sprite):
     """
-    ビームに関するクラス
+    ビームに関すeるクラス
     """
     def __init__(self, bird: Bird):
         """
@@ -241,6 +242,36 @@ class Score:
         screen.blit(self.image, self.rect)
 
 
+class EMP(pg.sprite.Sprite):
+    """
+    電磁パルスに関するクラス
+    """
+    def __init__(self, emys:Enemy, Bmbs:Bomb,screen):
+        """
+        ビーム画像Surfaceを生成する
+        引数 bird：ビームを放つこうかとん
+        """
+        super().__init__()
+        #for i in Enemy.imgs:
+            #emy.image=pg.transform.laplacian(i)
+        for emy in emys:
+            emy.image=pg.transform.laplacian(emy.image)
+            emy.interval=math.inf
+        for bomb in Bmbs:
+            bomb.speed/=2
+            bomb.state="inactive"
+        self.image=pg.Surface((WIDTH, HEIGHT))
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH/2,HEIGHT/2)
+        pg.draw.rect(self.image, (255, 255, 0), (0,0,1600,900), width=0)
+        self.image.set_alpha(50)
+        pg.display.update()
+        self.image.set_colorkey((0, 0, 0))
+        time.sleep(2)
+        self.image.set_alpha(100)
+        pg.display.update()
+        
+
 def main():
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -252,6 +283,9 @@ def main():
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
+    EMPs=pg.sprite.Group()
+
+    score.value = 100
 
     tmr = 0
     clock = pg.time.Clock()
@@ -262,7 +296,19 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
+            #print(key_lst[pg.K_e] , score.value > 20)
+            
+        if  key_lst[pg.K_e] and score.value > 20:
+                print("EMP")
+                EMPs.add(EMP(emys,bombs,screen))
+                
+            #この上はビームに倣って適当につけた
+                score.value -= 20
+        
+
         screen.blit(bg_img, [0, 0])
+
+            
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
             emys.add(Enemy())
@@ -298,6 +344,8 @@ def main():
         exps.update()
         exps.draw(screen)
         score.update(screen)
+        EMPs.draw(screen)
+        EMPs.update()
         pg.display.update()
         tmr += 1
         clock.tick(50)
