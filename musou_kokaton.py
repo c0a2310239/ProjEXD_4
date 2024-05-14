@@ -138,7 +138,7 @@ class Bomb(pg.sprite.Sprite):
 
 class Beam(pg.sprite.Sprite):
     """
-    ビームに関するクラス
+    ビームに関すeるクラス
     """
     def __init__(self, bird: Bird):
         """
@@ -206,6 +206,7 @@ class Enemy(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = random.randint(0, WIDTH), 0
         self.vy = +6
+        #self.bound = random.randint(50, int(HEIGHT/2))  # 停止位置
         self.bound = random.randint(50, int(HEIGHT/2))  # 停止位置
         self.state = "down"  # 降下状態or停止状態
         self.interval = random.randint(50, 300)  # 爆弾投下インターバル
@@ -335,7 +336,6 @@ def main():
 
         screen.blit(bg_img, [0, 0])
 
-        #左シフトを押した時birdの速度を20に変更する
         if key_lst[pg.K_LSHIFT]:
             bird.speed = 20
         else:
