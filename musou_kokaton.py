@@ -101,8 +101,8 @@ class Bird(pg.sprite.Sprite):
             self.dire = tuple(sum_mv)
             self.image = self.imgs[self.dire]
 
-        if (self.state == "hyper"):     #無敵状態の場合
-            if (self.hyper_life <= 0):  #時間が0の場合
+        if self.state == "hyper":     #無敵状態の場合
+            if self.hyper_life <= 0:  #時間が0の場合
                 self.state="normal"     #ノーマルモードにする
             else:
                 self.hyper_life -= 1    #時間を1フレームごとに減らす
@@ -273,7 +273,7 @@ def main():
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
 
-            if ((event.type == pg.KEYDOWN) and event.key == pg.K_RSHIFT) and (score.value >= 100) and not(bird.state=="hyper"):   #Rshiftキーが押されたかつスコアが１００以上の場合
+            if (event.type == pg.KEYDOWN) and (event.key == pg.K_RSHIFT) and (score.value >= 100) and not (bird.state=="hyper"):   #Rshiftキーが押されたかつスコアが１００以上の場合
                 bird.state = "hyper"    #無敵状態にする
                 score.value -= 100      #スコアを減らして５００フレーム分無敵にする
                 bird.hyper_life = 500
