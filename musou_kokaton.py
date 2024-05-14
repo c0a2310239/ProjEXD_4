@@ -240,6 +240,23 @@ class Score:
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         screen.blit(self.image, self.rect)
 
+class Gravity(pg.sprite.Sprite):
+    """
+    エンターキーを押すと画面内の敵を倒す
+    """
+    def __init__(self, life):
+        super().__init__()
+        self.image = pg.Surface((1600,900))
+        pg.draw.rect(self.image, (0, 0, 0), (0, 0, 1600, 900))
+        self.image.set_alpha(200)
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH/2, HEIGHT/2)
+        self.life = life     #発動時間の定義
+    def update(self):
+        self.life -= 1
+        if self.life <= 0:
+            self.kill()
+
 class Sheeld(pg.sprite.Sprite):
     """
     こうかとんの向いている向きに長方形のシールドを表示するクラス
@@ -285,6 +302,7 @@ class Sheeld(pg.sprite.Sprite):
         
 
         
+
 def main():
 
 
@@ -292,17 +310,15 @@ def main():
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
     score = Score()
+    #score.value =900000000
 
     bird = Bird(3, (900, 400))
     bombs = pg.sprite.Group()
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
+    gravity = pg.sprite.Group()
     sheelds = pg.sprite.Group()
-    
-    # デバッグ
-    #score.value = 100
-
 
     tmr = 0
     clock = pg.time.Clock()
@@ -313,6 +329,10 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
+            if event.type == pg.KEYDOWN and event.key == pg.K_RETURN and score.value >= 200:
+                gravity.add(Gravity(400))
+                score.value -= 200
+
         screen.blit(bg_img, [0, 0])
 
         #左シフトを押した時birdの速度を20に変更する
@@ -337,6 +357,15 @@ def main():
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.value += 1  # 1点アップ
+
+        for emy in pg.sprite.groupcollide(emys, gravity, True, False).keys():
+            exps.add(Explosion(emy, 100))
+            score.value += 10
+            bird.change_img(6, screen)
+
+        for bomb in pg.sprite.groupcollide(bombs, gravity, True, False).keys():
+            exps.add(Explosion(bomb, 50))
+            score.value += 1
 
         if len(pg.sprite.spritecollide(bird, bombs, True)) != 0:
             bird.change_img(8, screen) # こうかとん悲しみエフェクト
@@ -373,11 +402,12 @@ def main():
         exps.update()
         exps.draw(screen)
         score.update(screen)
+        gravity.draw(screen)
+        gravity.update()
 
         if not Sheeld.is_not_shield:
             sheelds.update(bird)
             sheelds.draw(screen)
-
         pg.display.update()
         tmr += 1
         clock.tick(50)
