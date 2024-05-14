@@ -266,7 +266,7 @@ def main():
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
     score = Score()
-    score.value =900000000
+    #score.value =900000000
 
     bird = Bird(3, (900, 400))
     bombs = pg.sprite.Group()
