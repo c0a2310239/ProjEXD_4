@@ -280,6 +280,7 @@ class Sheeld(pg.sprite.Sprite):
         #print(self.life)
         self.life -= 1
         if self.life < 0:
+            __class__.is_not_shield = True
             self.kill()
         
 
@@ -346,6 +347,8 @@ def main():
             print(Sheeld.is_not_shield)
             #score.value -= 50
             print("シールド展開")
+            # スコアが50減る
+            score.value -= 50
             sheelds.add(Sheeld(bird, 400))
 
 
