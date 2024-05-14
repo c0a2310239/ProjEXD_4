@@ -350,6 +350,11 @@ def main():
             # スコアが50減る
             score.value -= 50
             sheelds.add(Sheeld(bird, 400))
+        
+        # 壁と爆弾が衝突したら爆発
+        for bomb in pg.sprite.groupcollide(bombs, sheelds, True, False).keys():
+            exps.add(Explosion(bomb, 50))
+            score.value += 1
 
 
         bird.update(key_lst, screen)
